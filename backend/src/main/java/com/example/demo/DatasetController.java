@@ -142,10 +142,16 @@ public class DatasetController {
 
         // Predefined spend ranges
         List<String> spendRanges = Arrays.asList(
-            "Under $50",
-            "$50 - $100",
-            "$100 - $200",
-            "Over $200"
+            "Under 50",
+            "51 - 100",
+            "101 - 200",
+            "201 - 300",
+            "301 - 400",
+            "401 - 500",
+            "501 - 700",
+            "701 - 900",
+            "901 - 1000",
+            "Over 1001"
         );
 
         filters.put("countries", countries);
@@ -174,10 +180,16 @@ public class DatasetController {
                     String[] parts = avgSpendStr.split("\\s+");
                     double avgSpend = Double.parseDouble(parts[0]);
                     return switch (spendRange) {
-                        case "Under $50" -> avgSpend < 50;
-                        case "$50 - $100" -> avgSpend >= 50 && avgSpend <= 100;
-                        case "$100 - $200" -> avgSpend > 100 && avgSpend <= 200;
-                        case "Over $200" -> avgSpend > 200;
+                        case "Under 50" -> avgSpend <= 50;
+                        case "51 - 100" -> avgSpend > 50 && avgSpend <= 100;
+                        case "101 - 200" -> avgSpend > 100 && avgSpend <= 200;
+                        case "201 - 300" -> avgSpend > 200 && avgSpend <= 300;
+                        case "301 - 400" -> avgSpend > 300 && avgSpend <= 400;
+                        case "401 - 500" -> avgSpend > 400 && avgSpend <= 500;
+                        case "501 - 700" -> avgSpend > 500 && avgSpend <= 700;
+                        case "701 - 900" -> avgSpend > 700 && avgSpend <= 900;
+                        case "901 - 1000" -> avgSpend > 900 && avgSpend <= 1000;
+                        case "Over 1001" -> avgSpend > 1000;
                         default -> true;
                     };
                 } catch (Exception e) {
