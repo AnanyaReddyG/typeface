@@ -9,7 +9,7 @@ export default function RestaurantDetail() {
   const fromPage = location.state?.fromPage || 0; // Get page from navigation state
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/restaurants/num/${id}`)
+    axios.get(`http://localhost:8080/restaurants/${id}`)
       .then(response => setRestaurant(response.data));
   }, [id]);
 

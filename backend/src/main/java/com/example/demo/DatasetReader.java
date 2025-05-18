@@ -4,7 +4,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -39,6 +41,13 @@ public class DatasetReader {
                 }
 
                 Restaurant restaurant = new Restaurant();
+                String cuisinesRaw = line[9].trim();
+                List<String> cuisines = Arrays.stream(cuisinesRaw.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+
+                restaurant.setCuisinels(cuisines);
                 restaurant.setId(Integer.parseInt(line[0].trim()));
                 restaurant.setName(line[1].trim());       // Restaurant Name (index 1)
                 restaurant.setLocation(line[3].trim());   // City (index 3)
@@ -46,6 +55,11 @@ public class DatasetReader {
                 restaurant.setRating(line[19].trim());    // Rating text (index 19)
                 restaurant.setLatitude(Double.parseDouble(line[8].trim()));
                 restaurant.setLongitude(Double.parseDouble(line[7].trim()));
+                restaurant.setCountry(line[3].trim());
+                String amount = line[10].trim();
+                String currency = line[11].trim();
+                String avgSpendString = amount + " " + currency; // e.g., "500 INR"
+                restaurant.setAverageSpend(avgSpendString);
                 // double distance = GeoUtils.haversine(14.565443, 121.027535, 14.565443, 121.027535);
                 // System.out.println(distance); // Should print 0.0 km (same location)
                 // double distance2 = GeoUtils.haversine(14.565443, 121.027535, 14.553708, 121.0141013);

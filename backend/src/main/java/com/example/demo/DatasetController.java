@@ -1,6 +1,9 @@
 package com.example.demo;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -9,11 +12,18 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-@CrossOrigin(origins = "http://localhost:3000")
+
+// @CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(
+  origins = "http://localhost:3000", 
+  allowedHeaders = "*", 
+  methods = {RequestMethod.GET, RequestMethod.POST} // Add other methods if needed
+)
 @RestController
 @RequestMapping("/restaurants")
 public class DatasetController {
@@ -47,13 +57,35 @@ public class DatasetController {
         return result;
     }
 
-    // 2. Get restaurant by ID
-    @GetMapping("/{id}")
+    @GetMapping("/num/{id}")
     public Restaurant getRestaurantById(@PathVariable int id) {
         Optional<Restaurant> restaurant = restaurantList.stream()
                 .filter(r -> r.getId() == id)
                 .findFirst();
         return restaurant.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+    }
+
+    @GetMapping("/search")
+    public List<Restaurant> searchRestaurantsByName(@RequestParam("name") String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name parameter is required");
+        }
+        String searchTerm = name.trim().toLowerCase();
+        List<String> searchWords = List.of(searchTerm.split("\\s+"));
+
+        return restaurantList.stream()
+            .filter(r -> r.getName() != null)
+            .filter(r -> {
+                String[] restaurantNameWords = r.getName().toLowerCase().split("\\s+");
+                // Check if any search word matches any word in restaurant name (partial match)
+                return searchWords.stream().anyMatch(
+                    searchWord -> 
+                        // partial match with any word in restaurant name
+                        Arrays.stream(restaurantNameWords)
+                            .anyMatch(nameWord -> nameWord.contains(searchWord))
+                );
+            })
+            .collect(Collectors.toList());
     }
 
     // @GetMapping("/nearby")
@@ -114,6 +146,85 @@ public class DatasetController {
         System.out.println("Nearby restaurants: " + nearby.size());
         return nearby;
     }
+
+    @GetMapping("/filters")
+public Map<String, List<String>> getFilterOptions() {
+    Map<String, List<String>> filters = new HashMap<>();
+
+    // Extract unique countries
+    List<String> countries = restaurantList.stream()
+        .map(Restaurant::getCountry)
+        .distinct()
+        .collect(Collectors.toList());
+
+    // Flatten all cuisines from all restaurants, deduplicate and sort
+    List<String> cuisines = restaurantList.stream()
+        .flatMap(r -> r.getCuisinels().stream())
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .distinct()
+        .sorted()
+        .collect(Collectors.toList());
+
+    // Predefined spend ranges
+    List<String> spendRanges = Arrays.asList(
+        "Under $50",
+        "$50 - $100",
+        "$100 - $200",
+        "Over $200"
+    );
+
+    filters.put("countries", countries);
+    filters.put("cuisines", cuisines);
+    filters.put("spendRanges", spendRanges);
+
+    return filters;
+}
+
+@GetMapping("/filter")
+public RestaurantPage filterRestaurants(
+    @RequestParam(required = false) String country,
+    @RequestParam(required = false) String cuisine,
+    @RequestParam(required = false) String spendRange,
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size
+) {
+    List<Restaurant> filtered = restaurantList.stream()
+        .filter(r -> country == null || r.getCountry().equalsIgnoreCase(country))
+        .filter(r -> cuisine == null || r.getCuisinels().stream()
+            .anyMatch(c -> c.equalsIgnoreCase(cuisine)))
+        .filter(r -> {
+            if (spendRange == null) return true;
+            String avgSpendStr = r.getAverageSpend();
+            try {
+                String[] parts = avgSpendStr.split("\\s+");
+                double avgSpend = Double.parseDouble(parts[0]);
+                return switch (spendRange) {
+                    case "Under $50" -> avgSpend < 50;
+                    case "$50 - $100" -> avgSpend >= 50 && avgSpend <= 100;
+                    case "$100 - $200" -> avgSpend > 100 && avgSpend <= 200;
+                    case "Over $200" -> avgSpend > 200;
+                    default -> true;
+                };
+            } catch (Exception e) {
+                return false;
+            }
+        })
+        .collect(Collectors.toList());
+
+    int start = page * size;
+    int end = Math.min(start + size, filtered.size());
+    List<Restaurant> subList = (start > end) ? List.of() : filtered.subList(start, end);
+
+    RestaurantPage result = new RestaurantPage();
+    result.setContent(subList);
+    result.setPage(page);
+    result.setSize(size);
+    result.setTotalElements(filtered.size());
+    result.setTotalPages((int) Math.ceil((double) filtered.size() / size));
+    return result;
+}
+
 
 
 }
