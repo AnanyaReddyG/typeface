@@ -60,7 +60,7 @@ export default function FiltersDropdown({ onFilter }) {
               className="w-full text-left px-2 py-1 border rounded bg-gray-100 hover:bg-gray-200"
               onClick={() => handleDropdown('country')}
             >
-              Country {selected.country && `: ${selected.country}`}
+              City {selected.country && `: ${selected.country}`}
             </button>
             {dropdownOpen.country && (
               <div className="border rounded mt-1 bg-white shadow">

@@ -59,6 +59,11 @@ public class DatasetReader {
                 String currency = line[11].trim();
                 String avgSpendString = amount + " " + currency; 
                 restaurant.setAverageSpend(avgSpendString);
+                restaurant.setAddress(line[4].trim());
+                restaurant.setRatingDecimal(Double.parseDouble(line[17].trim()));
+                restaurant.setNumVotes(Integer.parseInt(line[20].trim()));
+                String textRating = Double.parseDouble(line[17].trim()) + "(" + Integer.parseInt(line[20].trim()) + ")";
+                restaurant.setRatingText(textRating);
                 restaurants.add(restaurant);
             }
         } catch (CsvValidationException e) {

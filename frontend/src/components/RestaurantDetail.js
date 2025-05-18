@@ -25,8 +25,13 @@ export default function RestaurantDetail() {
       </Link>
       <h1 className="text-3xl font-bold mb-2">{restaurant.name}</h1>
       <div className="mb-2"><strong>Location:</strong> {restaurant.location}</div>
-      <div className="mb-2"><strong>Cuisines:</strong> {restaurant.cuisines}</div>
-      <div className="mb-2"><strong>Rating:</strong> {restaurant.rating}</div>
+      <div className="mb-2"><strong>Cuisines:</strong> {Array.isArray(restaurant.cuisines) ? restaurant.cuisines.join(', ') : restaurant.cuisines}</div>
+      <div className="mb-2"><strong>Address:</strong> {restaurant.address || "N/A"}</div>
+      <div className="mb-2">
+        <strong>Rating:</strong> 
+        {restaurant.ratingDecimal ? `${restaurant.ratingDecimal} (${restaurant.numVotes} votes)` : "N/A"}
+      </div>
+
     </div>
   );
 }
