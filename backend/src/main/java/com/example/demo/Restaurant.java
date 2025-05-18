@@ -29,9 +29,6 @@ public class Restaurant {
         this.cuisinels = cuisinels;
         this.avgSpend = avgSpend;
     }
-    // Add more fields as needed based on your CSV columns
-
-    // Getters and Setters
 
     public String getCountry() {
         return country;

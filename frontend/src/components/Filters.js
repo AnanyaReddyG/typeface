@@ -27,12 +27,9 @@ function Filters({ onFilter }) {
   };
 
   useEffect(() => {
-    // Call onFilter whenever selected changes
     onFilter(selected);
-    // eslint-disable-next-line
   }, [selected]);
 
-  // Helper to render checkboxes
   const renderCheckboxes = (type, list) => (
     <div className="mb-2">
       <div className="font-semibold capitalize">{type}</div>

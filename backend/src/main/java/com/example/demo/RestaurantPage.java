@@ -1,7 +1,5 @@
 package com.example.demo;
 
-import com.example.demo.Restaurant;
-
 import java.util.List;
 
 public class RestaurantPage {

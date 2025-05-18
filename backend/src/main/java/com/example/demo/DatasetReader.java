@@ -28,7 +28,6 @@ public class DatasetReader {
                 new InputStreamReader(is, StandardCharsets.UTF_8)
             );
 
-            // Skip header row
             reader.readNext();
 
             String[] line;
@@ -58,13 +57,8 @@ public class DatasetReader {
                 restaurant.setCountry(line[3].trim());
                 String amount = line[10].trim();
                 String currency = line[11].trim();
-                String avgSpendString = amount + " " + currency; // e.g., "500 INR"
+                String avgSpendString = amount + " " + currency; 
                 restaurant.setAverageSpend(avgSpendString);
-                // double distance = GeoUtils.haversine(14.565443, 121.027535, 14.565443, 121.027535);
-                // System.out.println(distance); // Should print 0.0 km (same location)
-                // double distance2 = GeoUtils.haversine(14.565443, 121.027535, 14.553708, 121.0141013);
-                // System.out.println(distance2);
-
                 restaurants.add(restaurant);
             }
         } catch (CsvValidationException e) {

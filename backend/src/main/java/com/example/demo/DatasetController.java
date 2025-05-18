@@ -88,32 +88,6 @@ public class DatasetController {
             .collect(Collectors.toList());
     }
 
-    // @GetMapping("/nearby")
-    // @ResponseBody
-    // public List<Restaurant> getNearbyRestaurants(
-    //     @RequestParam double userLat,
-    //     @RequestParam double userLon,
-    //     @RequestParam(defaultValue = "3") double radiusKm
-    // ) {
-    //     System.out.println("Total restaurants: " + restaurantList.size());
-        
-    //     List<Restaurant> nearbyList = restaurantList.stream()
-    //         .filter(restaurant -> {
-    //             double distance = GeoUtils.haversine(
-    //                 userLat, userLon,
-    //                 restaurant.getLatitude(), restaurant.getLongitude()
-    //             );
-    //             // Debug - log distances for all restaurants
-    //             // System.out.println("Restaurant: " + restaurant.getName() + 
-    //             //                   ", Distance: " + distance);
-    //             return distance <= radiusKm;
-    //         })
-    //         .collect(Collectors.toList());
-
-    //     System.out.println("Nearby restaurants: " + nearbyList.size());
-        
-    //     return nearbyList;
-    // }
     @GetMapping("/nearby")
     public List<Restaurant> getNearbyRestaurants(
         @RequestParam double userLat, 
@@ -148,83 +122,81 @@ public class DatasetController {
     }
 
     @GetMapping("/filters")
-public Map<String, List<String>> getFilterOptions() {
-    Map<String, List<String>> filters = new HashMap<>();
+    public Map<String, List<String>> getFilterOptions() {
+        Map<String, List<String>> filters = new HashMap<>();
 
-    // Extract unique countries
-    List<String> countries = restaurantList.stream()
-        .map(Restaurant::getCountry)
-        .distinct()
-        .collect(Collectors.toList());
+        // Extract unique countries
+        List<String> countries = restaurantList.stream()
+            .map(Restaurant::getCountry)
+            .distinct()
+            .collect(Collectors.toList());
 
-    // Flatten all cuisines from all restaurants, deduplicate and sort
-    List<String> cuisines = restaurantList.stream()
-        .flatMap(r -> r.getCuisinels().stream())
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .distinct()
-        .sorted()
-        .collect(Collectors.toList());
+        // Flatten all cuisines from all restaurants, deduplicate and sort
+        List<String> cuisines = restaurantList.stream()
+            .flatMap(r -> r.getCuisinels().stream())
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
 
-    // Predefined spend ranges
-    List<String> spendRanges = Arrays.asList(
-        "Under $50",
-        "$50 - $100",
-        "$100 - $200",
-        "Over $200"
-    );
+        // Predefined spend ranges
+        List<String> spendRanges = Arrays.asList(
+            "Under $50",
+            "$50 - $100",
+            "$100 - $200",
+            "Over $200"
+        );
 
-    filters.put("countries", countries);
-    filters.put("cuisines", cuisines);
-    filters.put("spendRanges", spendRanges);
+        filters.put("countries", countries);
+        filters.put("cuisines", cuisines);
+        filters.put("spendRanges", spendRanges);
 
-    return filters;
-}
+        return filters;
+    }
 
-@GetMapping("/filter")
-public RestaurantPage filterRestaurants(
-    @RequestParam(required = false) String country,
-    @RequestParam(required = false) String cuisine,
-    @RequestParam(required = false) String spendRange,
-    @RequestParam(defaultValue = "0") int page,
-    @RequestParam(defaultValue = "10") int size
-) {
-    List<Restaurant> filtered = restaurantList.stream()
-        .filter(r -> country == null || r.getCountry().equalsIgnoreCase(country))
-        .filter(r -> cuisine == null || r.getCuisinels().stream()
-            .anyMatch(c -> c.equalsIgnoreCase(cuisine)))
-        .filter(r -> {
-            if (spendRange == null) return true;
-            String avgSpendStr = r.getAverageSpend();
-            try {
-                String[] parts = avgSpendStr.split("\\s+");
-                double avgSpend = Double.parseDouble(parts[0]);
-                return switch (spendRange) {
-                    case "Under $50" -> avgSpend < 50;
-                    case "$50 - $100" -> avgSpend >= 50 && avgSpend <= 100;
-                    case "$100 - $200" -> avgSpend > 100 && avgSpend <= 200;
-                    case "Over $200" -> avgSpend > 200;
-                    default -> true;
-                };
-            } catch (Exception e) {
-                return false;
-            }
-        })
-        .collect(Collectors.toList());
+    @GetMapping("/filter")
+    public RestaurantPage filterRestaurants(
+        @RequestParam(required = false) String country,
+        @RequestParam(required = false) String cuisine,
+        @RequestParam(required = false) String spendRange,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        List<Restaurant> filtered = restaurantList.stream()
+            .filter(r -> country == null || r.getCountry().equalsIgnoreCase(country))
+            .filter(r -> cuisine == null || r.getCuisinels().stream()
+                .anyMatch(c -> c.equalsIgnoreCase(cuisine)))
+            .filter(r -> {
+                if (spendRange == null) return true;
+                String avgSpendStr = r.getAverageSpend();
+                try {
+                    String[] parts = avgSpendStr.split("\\s+");
+                    double avgSpend = Double.parseDouble(parts[0]);
+                    return switch (spendRange) {
+                        case "Under $50" -> avgSpend < 50;
+                        case "$50 - $100" -> avgSpend >= 50 && avgSpend <= 100;
+                        case "$100 - $200" -> avgSpend > 100 && avgSpend <= 200;
+                        case "Over $200" -> avgSpend > 200;
+                        default -> true;
+                    };
+                } catch (Exception e) {
+                    return false;
+                }
+            })
+            .collect(Collectors.toList());
 
-    int start = page * size;
-    int end = Math.min(start + size, filtered.size());
-    List<Restaurant> subList = (start > end) ? List.of() : filtered.subList(start, end);
+        int start = page * size;
+        int end = Math.min(start + size, filtered.size());
+        List<Restaurant> subList = (start > end) ? List.of() : filtered.subList(start, end);
 
-    RestaurantPage result = new RestaurantPage();
-    result.setContent(subList);
-    result.setPage(page);
-    result.setSize(size);
-    result.setTotalElements(filtered.size());
-    result.setTotalPages((int) Math.ceil((double) filtered.size() / size));
-    return result;
-}
-
-
+        RestaurantPage result = new RestaurantPage();
+        result.setContent(subList);
+        result.setPage(page);
+        result.setSize(size);
+        result.setTotalElements(filtered.size());
+        result.setTotalPages((int) Math.ceil((double) filtered.size() / size));
+        return result;
+    }
 
 }
